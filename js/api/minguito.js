@@ -1,4 +1,3 @@
-import { apiRequest } from './client.js';
 import { isLocalMode } from '../config.js';
 import { localTalkToMinguito, localGetListings } from '../local/store.js';
 import { getDemand } from '../local/demands.js';
@@ -125,8 +124,16 @@ export async function talkToMinguito(input) {
 
     return localTalkToMinguito(input);
   }
-  return apiRequest('/minguito/message', {
-    method: 'POST',
-    body: input,
-  });
+  /* Modo api (Vercel/Supabase): sem servidor Node :3000 e sem Grok nesta fase.
+   * Resposta determinística — não chama API_URL (evita ERR e CORS falsos). */
+  return {
+    reply:
+      'Sou o Minguito. No servidor ainda não negoceio por chat — isso chega na fase Grok. ' +
+      'Por agora: abre a publicação no Feed, segue no Fluxo quando houver proposta, ' +
+      'e o acordo continua pelas regras da plataforma (sem contacto directo na app).',
+    domain: {
+      status: 'api_minguito_pending',
+      phase: 'G',
+    },
+  };
 }

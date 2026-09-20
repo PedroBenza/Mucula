@@ -13,15 +13,73 @@ import { filterOnMarket } from '../domain/listing-market.js';
 import { resolvePersistedLocalUserId } from '../core/user-id.js';
 import { getSupabase } from './supabase-client.js';
 
+/**
+ * Resolve URL de imagem para UI / persistência.
+ * - data: e http(s): passam intactos (usáveis no browser).
+ * - Chaves local-media-* NÃO se concatenam a MEDIA_BASE em produção
+ *   (não existe :9000 no Vercel) → null (placeholder na UI).
+ * - Outras chaves opacas: só prefixa MEDIA_BASE em modo local (dev media server).
+ */
+function isDisplayableImageRef(value) {
+  if (value == null || value === '') return false;
+  var s = String(value);
+  if (s.indexOf('data:image/') === 0) return true;
+  if (s.indexOf('https://') === 0 || s.indexOf('http://') === 0) return true;
+  if (s.indexOf('blob:') === 0) return true;
+  return false;
+}
+
+function isLocalMediaKey(value) {
+  var s = String(value || '');
+  return s.indexOf('local-media-') === 0;
+}
+
 function publicUrlForKey(key) {
   if (!key) return null;
-  if (String(key).startsWith('http://') || String(key).startsWith('https://')) return key;
-  return `${MEDIA_BASE}/${key}`;
+  var s = String(key);
+  if (isDisplayableImageRef(s)) return s;
+  if (isLocalMediaKey(s)) return null;
+  if (isLocalMode()) {
+    return MEDIA_BASE.replace(/\/$/, '') + '/' + s;
+  }
+  return null;
+}
+
+/**
+ * Monta image_urls para INSERT api: prioriza data URL / URL absoluta.
+ * Nunca grava URL inventada para mucula.vercel.app:9000.
+ */
+function collectImageUrlsForApiInsert(input) {
+  input = input || {};
+  var out = [];
+  var seen = {};
+
+  function push(ref) {
+    if (!ref || seen[ref]) return;
+    if (!isDisplayableImageRef(ref)) return;
+    seen[ref] = true;
+    out.push(ref);
+  }
+
+  if (Array.isArray(input.imageUrls)) {
+    for (var i = 0; i < input.imageUrls.length; i++) push(input.imageUrls[i]);
+  }
+  push(input._localImageUrl);
+  push(input.imageUrl);
+
+  if (Array.isArray(input.imageStorageIds)) {
+    for (var j = 0; j < input.imageStorageIds.length; j++) {
+      var k = input.imageStorageIds[j];
+      if (isDisplayableImageRef(k)) push(k);
+      /* local-media-* ignorado de propósito — não é URL servível em api */
+    }
+  }
+  return out;
 }
 
 function mapRowToListing(row) {
   if (!row) return null;
-  const imageUrls = (row.image_urls || []).filter(Boolean).map(publicUrlForKey);
+  const imageUrls = (row.image_urls || []).map(publicUrlForKey).filter(Boolean);
   return {
     _id: row.id,
     title: row.title,
@@ -155,15 +213,7 @@ export async function createListing(input) {
     throw e;
   }
 
-  const imageUrls = [];
-  if (input.imageStorageIds && input.imageStorageIds.length) {
-    for (const key of input.imageStorageIds) {
-      if (key) imageUrls.push(publicUrlForKey(key) || key);
-    }
-  }
-  if (input._localImageUrl && imageUrls.length === 0) {
-    imageUrls.push(input._localImageUrl);
-  }
+  const imageUrls = collectImageUrlsForApiInsert(input);
 
   const payload = {
     author_id: user.id,

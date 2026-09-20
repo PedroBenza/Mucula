@@ -500,6 +500,8 @@ export function renderCreateService(root) {
             location: { neighborhood: state.neighborhood },
             imageStorageIds: state.storageKey ? [state.storageKey] : undefined,
             _localImageUrl: state.imageUrl || undefined,
+            imageUrl: state.imageUrl || undefined,
+            imageUrls: state.imageUrl ? [state.imageUrl] : undefined,
             _platformFee: calcPlatformFee(state.price),
           });
           clearBandaTimer();
