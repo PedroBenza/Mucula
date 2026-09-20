@@ -4,6 +4,8 @@
  */
 import { createListing } from '../../api/listings.js';
 import { pickAndReadImage } from '../../local/media.js';
+import { ensurePublicImageUrl } from '../../api/storage.js';
+import { isLocalMode } from '../../config.js';
 import { navigate } from '../../core/router.js';
 import { getSession } from '../../state/session.js';
 import { ApiError, NetworkError } from '../../api/client.js';
@@ -371,6 +373,7 @@ export function renderCreateService(root) {
         pickAndReadImage(file)
           .then(function (r) {
             if (!r) return;
+            state.imageFile = file;
             state.imageUrl = r.dataUrl || r.url || r.publicUrl || '';
             state.storageKey = r.storageKey || r.key || '';
             paint();
@@ -485,6 +488,15 @@ export function renderCreateService(root) {
         var err = root.querySelector('#mc-s-err');
         pub.disabled = true;
         try {
+          var publicImg = null;
+          if (isLocalMode()) {
+            publicImg = state.imageUrl || null;
+          } else {
+            publicImg = await ensurePublicImageUrl({
+              file: state.imageFile || null,
+              imageUrl: state.imageUrl || null,
+            });
+          }
           var res = await createListing({
             type: 'servico',
             title: state.title,
@@ -499,9 +511,9 @@ export function renderCreateService(root) {
             category: 'servicos',
             location: { neighborhood: state.neighborhood },
             imageStorageIds: state.storageKey ? [state.storageKey] : undefined,
-            _localImageUrl: state.imageUrl || undefined,
-            imageUrl: state.imageUrl || undefined,
-            imageUrls: state.imageUrl ? [state.imageUrl] : undefined,
+            _localImageUrl: publicImg || undefined,
+            imageUrl: publicImg || undefined,
+            imageUrls: publicImg ? [publicImg] : undefined,
             _platformFee: calcPlatformFee(state.price),
           });
           clearBandaTimer();

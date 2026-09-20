@@ -3,6 +3,8 @@
  */
 import { createListing } from '../../api/listings.js';
 import { pickAndReadImage } from '../../local/media.js';
+import { ensurePublicImageUrl } from '../../api/storage.js';
+import { isLocalMode } from '../../config.js';
 import { navigate } from '../../core/router.js';
 import { getSession } from '../../state/session.js';
 import { CATEGORIES } from '../../constants/categories.js';
@@ -421,6 +423,7 @@ export function renderCreateProduct(root) {
         pickAndReadImage(file)
           .then(function (r) {
             if (!r) return;
+            state.imageFile = file;
             state.imageUrl = r.dataUrl || r.url || r.publicUrl || '';
             state.storageKey = r.storageKey || r.key || '';
             paint();
@@ -585,11 +588,25 @@ export function renderCreateProduct(root) {
                 : undefined,
             location: { neighborhood: state.neighborhood },
             imageStorageIds: state.storageKey ? [state.storageKey] : undefined,
-            _localImageUrl: state.imageUrl || undefined,
-            imageUrl: state.imageUrl || undefined,
-            imageUrls: state.imageUrl ? [state.imageUrl] : undefined,
+            _localImageUrl: undefined,
+            imageUrl: undefined,
+            imageUrls: undefined,
             _platformFee: calcPlatformFee(state.price),
           };
+          var publicImg = null;
+          if (isLocalMode()) {
+            publicImg = state.imageUrl || null;
+          } else {
+            publicImg = await ensurePublicImageUrl({
+              file: state.imageFile || null,
+              imageUrl: state.imageUrl || null,
+            });
+          }
+          if (publicImg) {
+            payload.imageUrl = publicImg;
+            payload.imageUrls = [publicImg];
+            payload._localImageUrl = publicImg;
+          }
           var res = await createListing(payload);
           clearBandaTimer();
           navigate('/listing/' + res.id, { replace: true });
