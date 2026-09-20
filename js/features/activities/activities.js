@@ -718,7 +718,7 @@ export async function renderActivities(root) {
       actions +=
         '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" data-ok-confirm="' +
         esc(row.confirm) +
-        '">Aceitar acordo</button>';
+        '">Confirmar acordo</button>';
       actions +=
         '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" data-ok-reject="' +
         esc(row.confirm) +
@@ -734,7 +734,7 @@ export async function renderActivities(root) {
       actions +=
         '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" data-ok-href="' +
         esc(it.href) +
-        '">Abrir Minguito</button>';
+        '">Falar com o Minguito</button>';
     }
     var priceLine =
       it.proposedPrice != null
@@ -779,15 +779,22 @@ export async function renderActivities(root) {
           };
         var rj = el.querySelector('[data-ok-reject]');
         if (rj)
-          rj.onclick = function () {
+          rj.onclick = async function () {
+            if (rj.disabled) return;
+            rj.disabled = true;
+            var prev = rj.textContent;
+            rj.textContent = 'A recusar…';
             try {
-              rejectAsSeller(rj.getAttribute('data-ok-reject'), uid);
+              await rejectAsSeller(rj.getAttribute('data-ok-reject'), uid);
               closeSheet();
-              renderActivities(root);
+              await renderActivities(root);
             } catch (e) {
+              rj.disabled = false;
+              rj.textContent = prev || 'Recusar proposta';
               if (err) {
                 err.hidden = false;
-                err.textContent = (e && e.message) || 'Não deu.';
+                err.textContent =
+                  (e && e.message) || 'Não foi possível recusar.';
               }
             }
           };
