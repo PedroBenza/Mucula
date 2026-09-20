@@ -45,7 +45,9 @@ export function createListingCard(listing) {
     '">' +
     '<div class="mc-lcard-media">' +
     (src
-      ? '<img src="' + escapeHtml(src) + '" alt="" loading="lazy" decoding="async" />'
+      ? '<img class="mc-lcard-img" src="' +
+        escapeHtml(src) +
+        '" alt="" width="400" height="400" loading="lazy" decoding="async" fetchpriority="low" />'
       : '<div class="mc-lcard-ph"></div>') +
     (cond === 'novo' ? '<span class="mc-lcard-badge mc-lcard-badge--novo">Novo</span>' : '') +
     (listing.isFeatured && (listing.featuredUntil == null || Number(listing.featuredUntil) > Date.now())
@@ -120,7 +122,9 @@ function createWideCard(listing) {
     '">' +
     '<div class="mc-lcard-wide-img">' +
     (src
-      ? '<img src="' + escapeHtml(src) + '" alt="" loading="lazy" />'
+      ? '<img class="mc-lcard-img" src="' +
+        escapeHtml(src) +
+        '" alt="" width="200" height="115" loading="lazy" decoding="async" fetchpriority="low" />'
       : '<div class="mc-lcard-ph" style="height:100%"></div>') +
     '</div>' +
     '<div class="mc-lcard-wide-body">' +

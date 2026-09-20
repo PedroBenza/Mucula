@@ -5,6 +5,7 @@
  */
 import { isLocalMode } from '../config.js';
 import { getSupabase } from './supabase-client.js';
+import { compressForUpload } from '../core/image-optimize.js';
 
 var BUCKET = 'listing-images';
 var MAX_BYTES = 5 * 1024 * 1024;
@@ -54,18 +55,30 @@ export async function uploadListingImage(file) {
     throw e;
   }
 
+  /* Comprimir antes de subir — Feed deixa de puxar multi-MB */
+  var toUpload = file;
+  try {
+    toUpload = await compressForUpload(file);
+  } catch (eComp) {
+    toUpload = file;
+  }
+  var upType = (toUpload && toUpload.type) || 'image/jpeg';
+
   var name =
     (file.name && safeName(file.name)) ||
-    'foto.' + extFromType(type);
+    'foto.' + extFromType(upType);
   if (name.indexOf('.') < 0) {
-    name = name + '.' + extFromType(type);
+    name = name + '.' + extFromType(upType);
+  }
+  if (!/\.jpe?g$/i.test(name) && upType.indexOf('jpeg') >= 0) {
+    name = name.replace(/\.[^.]+$/, '') + '.jpg';
   }
   var path = user.id + '/' + Date.now() + '-' + name;
 
-  const { error } = await sb.storage.from(BUCKET).upload(path, file, {
-    contentType: type,
+  const { error } = await sb.storage.from(BUCKET).upload(path, toUpload, {
+    contentType: upType,
     upsert: false,
-    cacheControl: '3600',
+    cacheControl: '86400',
   });
   if (error) {
     throw new Error(error.message || 'Falha no upload da imagem.');

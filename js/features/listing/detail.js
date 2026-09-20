@@ -59,11 +59,11 @@ export async function renderListingDetail(root, id) {
       }
     } catch (eCat) {}
     var src = item.imageUrl || (item.imageUrls && item.imageUrls[0]);
-    var img = src ?
-      '<img src="' +
-      escapeHtml(src) +
-      '" alt="" style="width:100%;border-radius:var(--mc-radius-lg);margin-bottom:12px" />' :
-      '';
+    var img = src
+      ? '<img class="mc-detail-hero" src="' +
+        escapeHtml(src) +
+        '" alt="" width="800" height="600" decoding="async" fetchpriority="high" style="width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:var(--mc-radius-lg);margin-bottom:12px;background:var(--mc-surface,#f5f5f4)" />'
+      : '';
     var stateLine = myNeg ?
       '<p style="margin-top:10px;font-size:13px"><span class="mc-muted">Estado: </span><strong>' +
       escapeHtml(negotiationLabel(myNeg.state)) +

@@ -1,8 +1,9 @@
 /**
- * Leitura local de imagem (data URL).
+ * Leitura local de imagem com compressão (preview leve).
  * Aceita File, Blob ou <input type="file">.
- * Devolve aliases estáveis para product/service/announcement.
  */
+import { compressForPreview } from '../core/image-optimize.js';
+
 export function pickAndReadImage(input) {
   return new Promise(function (resolve, reject) {
     var file = null;
@@ -27,25 +28,47 @@ export function pickAndReadImage(input) {
       reject(new Error('Escolhe uma imagem'));
       return;
     }
-    var reader = new FileReader();
-    reader.onload = function () {
-      var url = String(reader.result || '');
-      if (!url) {
-        reject(new Error('Falha a ler imagem'));
-        return;
-      }
-      var key = 'local-media-' + Date.now();
-      resolve({
-        key: key,
-        storageKey: key,
-        publicUrl: url,
-        dataUrl: url,
-        url: url,
+
+    compressForPreview(file)
+      .then(function (out) {
+        var url = out.dataUrl || '';
+        if (!url) {
+          reject(new Error('Falha a ler imagem'));
+          return;
+        }
+        var key = 'local-media-' + Date.now();
+        resolve({
+          key: key,
+          storageKey: key,
+          publicUrl: url,
+          dataUrl: url,
+          url: url,
+          blob: out.blob,
+          file: file,
+        });
+      })
+      .catch(function (err) {
+        /* Fallback: FileReader original */
+        var reader = new FileReader();
+        reader.onload = function () {
+          var url = String(reader.result || '');
+          if (!url) {
+            reject(err || new Error('Falha a ler imagem'));
+            return;
+          }
+          var key = 'local-media-' + Date.now();
+          resolve({
+            key: key,
+            storageKey: key,
+            publicUrl: url,
+            dataUrl: url,
+            url: url,
+          });
+        };
+        reader.onerror = function () {
+          reject(new Error('Falha a ler imagem'));
+        };
+        reader.readAsDataURL(file);
       });
-    };
-    reader.onerror = function () {
-      reject(new Error('Falha a ler imagem'));
-    };
-    reader.readAsDataURL(file);
   });
 }
