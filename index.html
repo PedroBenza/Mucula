@@ -38,6 +38,11 @@
   }
 }
 </script>
+<script>
+  if (/\.vercel\.app$/.test(window.location.hostname)) {
+    window.__MC_DATA_MODE__ = 'api';
+  }
+</script>
 <script type="module" src="./js/app.js"></script>
 </body>
 </html>
