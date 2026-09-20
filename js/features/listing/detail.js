@@ -12,7 +12,7 @@ import { resolveUserId, sameUserId } from '../../core/user-id.js';
 import { negotiationLabel } from '../../domain/human-state.js';
 import { COPY } from '../../constants/copy.js';
 import { track } from '../../local/telemetry.js';
-import { recordListingViewOncePerDay } from '../../local/listing-views.js';
+import { recordListingViewOncePerDay } from '../../api/listing-views.js';
 import { calcPlatformFee } from '../../local/platform-fee.js';
 import { listingStatusLabel } from '../../domain/listing-market.js';
 import { setResumePath } from '../../core/resume.js';
@@ -44,7 +44,7 @@ export async function renderListingDetail(root, id) {
     var item = await fetchListingById(id);
     var sess = getSession();
     var uid = resolveUserId();
-    try { recordListingViewOncePerDay(id, uid); } catch (eTrack) {}
+    try { await recordListingViewOncePerDay(id, uid); } catch (eTrack) {}
     var isSeller = !!(uid && item.authorId && sameUserId(item.authorId, uid));
     var myNeg = await findOpenForListing(id, uid);
     

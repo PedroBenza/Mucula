@@ -1,7 +1,7 @@
 import { CATEGORIES, WIDE_CATEGORIES } from '../constants/categories.js';
 import { fmtCardPrice, fmtCardPriceWithUnit } from '../shared/format-price.js';
 import { navigate } from '../core/router.js';
-import { isSaved, toggleSave } from '../local/saves.js';
+import { isSaved, toggleSave } from '../api/saves.js';
 
 function escapeHtml(s) {
   return String(s)
@@ -35,7 +35,7 @@ export function createListingCard(listing) {
   var isPriceHidden = catDef && catDef.priceHidden ? true : false;
   var src = pickImage(listing);
   var cond = listing.condition === 'novo' || listing.condition === 'usado' ? listing.condition : null;
-  var saved = isSaved(listing._id);
+  var saved = false;
 
   var wrap = document.createElement('div');
   wrap.className = 'mc-lcard';
@@ -72,11 +72,26 @@ export function createListingCard(listing) {
     e.preventDefault();
     navigate('/listing/' + listing._id);
   });
-  wrap.querySelector('.mc-lcard-heart').addEventListener('click', function (e) {
+  var heartBtn = wrap.querySelector('.mc-lcard-heart');
+  isSaved(listing._id || listing.id)
+    .then(function (on) {
+      if (heartBtn) heartBtn.textContent = on ? '❤️' : '🤍';
+    })
+    .catch(function () {});
+  heartBtn.addEventListener('click', function (e) {
     e.preventDefault();
     e.stopPropagation();
-    var on = toggleSave(listing._id);
-    e.currentTarget.textContent = on ? '❤️' : '🤍';
+    var btn = e.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    toggleSave(listing._id || listing.id)
+      .then(function (on) {
+        btn.textContent = on ? '❤️' : '🤍';
+        btn.disabled = false;
+      })
+      .catch(function () {
+        btn.disabled = false;
+      });
   });
   return wrap;
 }
@@ -95,7 +110,7 @@ function createWideCard(listing) {
   } else {
     price = 'A partir de ' + Number(listing.price).toLocaleString('pt-AO') + ' Kz' + unit;
   }
-  var saved = isSaved(listing._id);
+  var saved = false;
 
   var wrap = document.createElement('div');
   wrap.className = 'mc-lcard-wide';
@@ -130,11 +145,26 @@ function createWideCard(listing) {
     e.preventDefault();
     navigate('/listing/' + listing._id);
   });
-  wrap.querySelector('.mc-lcard-heart').addEventListener('click', function (e) {
+  var heartBtn = wrap.querySelector('.mc-lcard-heart');
+  isSaved(listing._id || listing.id)
+    .then(function (on) {
+      if (heartBtn) heartBtn.textContent = on ? '❤️' : '🤍';
+    })
+    .catch(function () {});
+  heartBtn.addEventListener('click', function (e) {
     e.preventDefault();
     e.stopPropagation();
-    var on = toggleSave(listing._id);
-    e.currentTarget.textContent = on ? '❤️' : '🤍';
+    var btn = e.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    toggleSave(listing._id || listing.id)
+      .then(function (on) {
+        btn.textContent = on ? '❤️' : '🤍';
+        btn.disabled = false;
+      })
+      .catch(function () {
+        btn.disabled = false;
+      });
   });
   return wrap;
 }
