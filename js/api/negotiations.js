@@ -164,12 +164,37 @@ export async function findOpenForListing(listingId, userId) {
 
 export async function rejectAsSeller(id, sellerId) {
   if (isLocalMode()) return localNeg.rejectAsSeller(id, sellerId);
-  const e = new Error('Recusar em modo servidor chega na próxima fase.');
-  e.code = 'NOT_IMPLEMENTED';
-  throw e;
+  const sb = getSupabase();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    const e = new Error('Precisas de entrar para recusar.');
+    e.code = 'NEED_AUTH';
+    throw e;
+  }
+  const { data, error } = await sb.rpc('reject_as_seller', {
+    p_negotiation_id: id,
+  });
+  if (error) {
+    const e = new Error(error.message || 'Não foi possível recusar.');
+    e.code = error.code || 'REJECT_FAILED';
+    throw e;
+  }
+  return mapRow(Array.isArray(data) ? data[0] : data) || { id, state: 'closed' };
 }
 
+/**
+ * Em api: pede ao servidor fechar negociações expiradas (48h).
+ * Em local: sweep in-memory / localStorage.
+ */
 export async function sweepExpiredNegotiations(now) {
   if (isLocalMode()) return localNeg.sweepExpiredNegotiations(now);
-  return null;
+  const sb = getSupabase();
+  const { data, error } = await sb.rpc('expire_stale_negotiations');
+  if (error) {
+    /* RPC em falta não deve partir o Fluxo */
+    return null;
+  }
+  return data;
 }

@@ -1,0 +1,58 @@
+/* Banner instalação PWA — Mucula */
+#mc-pwa-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.mc-pwa-sheet {
+  pointer-events: auto;
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--mc-card, #fff);
+  color: var(--mc-text, #1c1917);
+  border: 1px solid var(--mc-border, #e7e5e4);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 14px 16px;
+}
+.mc-pwa-title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.mc-pwa-text {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--mc-text-muted, #57534e);
+}
+.mc-pwa-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.mc-pwa-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mc-pwa-btn--primary {
+  background: var(--mc-accent, #d97706);
+  color: var(--mc-on-accent, #fff);
+}
+.mc-pwa-btn--ghost {
+  background: transparent;
+  color: var(--mc-text-muted, #57534e);
+}
+@media (min-width: 1024px) {
+  #mc-pwa-banner {
+    bottom: 16px;
+  }
+}

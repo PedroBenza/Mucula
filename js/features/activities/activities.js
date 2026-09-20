@@ -5,6 +5,10 @@
 import { getSession } from '../../state/session.js';
 import { resolveUserId } from '../../core/user-id.js';
 import { buildContinuityItems } from '../../local/continuity.js';
+import {
+  buildContinuityItemsFromApi,
+  dashboardForAuthorFromApi,
+} from '../../api/continuity.js';
 import { navigate } from '../../core/router.js';
 import { isLocalMode } from '../../config.js';
 import { createDemandOffer, listOffersBySeller } from '../../local/demand-offers.js';
@@ -123,26 +127,39 @@ export async function renderActivities(root) {
     try {
       ensureDemandSeed();
     } catch (e0) {}
+    try {
+      sweepExpiredNegotiations();
+    } catch (eSw) {}
+  } else {
+    try {
+      await sweepExpiredNegotiations();
+    } catch (eSw2) {}
   }
 
   var items = [];
   try {
-    items = isLocalMode() ? buildContinuityItems(uid) : [];
+    if (isLocalMode()) {
+      items = buildContinuityItems(uid) || [];
+    } else {
+      items = (await buildContinuityItemsFromApi(uid)) || [];
+    }
   } catch (e) {
     items = [];
   }
 
-  var myOffers = [];
-  try {
-    myOffers = listOffersBySeller(uid) || [];
-  } catch (e2) {}
-  var offered = {};
-  for (var oi = 0; oi < myOffers.length; oi++) {
-    if (myOffers[oi].status !== 'withdrawn') offered[myOffers[oi].demandId] = true;
+  if (isLocalMode()) {
+    var myOffers = [];
+    try {
+      myOffers = listOffersBySeller(uid) || [];
+    } catch (e2) {}
+    var offered = {};
+    for (var oi = 0; oi < myOffers.length; oi++) {
+      if (myOffers[oi].status !== 'withdrawn') offered[myOffers[oi].demandId] = true;
+    }
+    items = items.filter(function (it) {
+      return !(it.kind === 'opportunity' && offered[it.demandId]);
+    });
   }
-  items = items.filter(function (it) {
-    return !(it.kind === 'opportunity' && offered[it.demandId]);
-  });
 
   var attention = [];
   var myDemands = [];
@@ -176,8 +193,11 @@ export async function renderActivities(root) {
     }
   }
 
-  var dash = dashboardForAuthor(uid);
+  var dash = isLocalMode()
+    ? dashboardForAuthor(uid)
+    : await dashboardForAuthorFromApi(uid);
   var T = dash.totals;
+
   var nAtt = attention.length;
 
   function paintHome() {

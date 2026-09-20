@@ -25,8 +25,10 @@ function isDisplayableImageRef(value) {
   if (value == null || value === '') return false;
   var s = String(value);
   if (s.indexOf('data:image/') === 0) return true;
-  if (s.indexOf('https://') === 0 || s.indexOf('http://') === 0) return true;
   if (s.indexOf('blob:') === 0) return true;
+  /* URLs antigas inventadas (:9000 / local-media) não são servíveis em Vercel */
+  if (s.indexOf(':9000/') >= 0 || s.indexOf('local-media-') >= 0) return false;
+  if (s.indexOf('https://') === 0 || s.indexOf('http://') === 0) return true;
   return false;
 }
 
@@ -179,18 +181,26 @@ export async function fetchMyListings() {
   if (!user) return [];
   const { data, error } = await sb
     .from('listings')
-    .select('id, title, price, status, category, created_at')
+    .select('id, title, price, status, category, created_at, image_urls, is_featured')
     .eq('author_id', user.id)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return (data || []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    price: Number(row.price),
-    status: row.status,
-    category: row.category,
-    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
-  }));
+  return (data || []).map((row) => {
+    const mapped = mapRowToListing(row) || {};
+    return {
+      id: row.id,
+      _id: row.id,
+      title: row.title,
+      price: Number(row.price),
+      status: row.status,
+      category: row.category,
+      createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      imageUrl: mapped.imageUrl || null,
+      imageUrls: mapped.imageUrls || [],
+      isFeatured: !!row.is_featured,
+      authorId: user.id,
+    };
+  });
 }
 
 export async function createListing(input) {

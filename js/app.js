@@ -21,6 +21,7 @@ import { isLocalMode } from './config.js';
 import { tabIconSvg } from './components/tab-icons.js';
 import { ensureLocalSeed } from './local/store.js';
 import { initDesktopShell } from './desktop/shell.js';
+import { initPwa } from './pwa/installer.js';
 
 var main = document.getElementById('mc-main');
 
@@ -149,6 +150,7 @@ async function boot() {
   showBootLoading();
   mountGuestWall();
   desktopShell = initDesktopShell();
+  initPwa();
   await runBootstrap();
   hideBootLoading();
   start();
