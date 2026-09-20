@@ -9,7 +9,7 @@ import {
   buildContinuityItemsFromApi,
   dashboardForAuthorFromApi,
 } from '../../api/continuity.js';
-import { navigate } from '../../core/router.js';
+import { navigate, getRoute } from '../../core/router.js';
 import { isLocalMode } from '../../config.js';
 import { createDemandOffer, listOffersBySeller } from '../../local/demand-offers.js';
 import {
@@ -113,7 +113,21 @@ function openSheet(title, contentHtml, onBind) {
   if (typeof onBind === 'function') onBind(el);
 }
 
+var _fxRenderGen = 0;
+
+function stillOnFluxo(gen) {
+  if (gen !== _fxRenderGen) return false;
+  try {
+    var path = getRoute().path || '';
+    return path === '/activities' || path.indexOf('/activities') === 0;
+  } catch (e) {
+    return true;
+  }
+}
+
 export async function renderActivities(root) {
+  var gen = ++_fxRenderGen;
+
   var uid = resolveUserId();
 
   if (!uid) {
@@ -123,6 +137,11 @@ export async function renderActivities(root) {
     return;
   }
 
+  /* Skeleton imediato — a aba responde já; dados chegam depois */
+  root.innerHTML =
+    pageHeaderHtml(COPY.headerFlows) +
+    '<div class="mc-fx-page"><p class="mc-fx-quiet">A carregar o teu Fluxo…</p></div>';
+
   if (isLocalMode()) {
     try {
       ensureDemandSeed();
@@ -130,36 +149,60 @@ export async function renderActivities(root) {
     try {
       sweepExpiredNegotiations();
     } catch (eSw) {}
-  } else {
-    try {
-      await sweepExpiredNegotiations();
-    } catch (eSw2) {}
   }
 
   var items = [];
-  try {
-    if (isLocalMode()) {
-      items = buildContinuityItems(uid) || [];
-    } else {
-      items = (await buildContinuityItemsFromApi(uid)) || [];
-    }
-  } catch (e) {
-    items = [];
-  }
+  var dash;
 
   if (isLocalMode()) {
-    var myOffers = [];
     try {
-      myOffers = listOffersBySeller(uid) || [];
-    } catch (e2) {}
-    var offered = {};
-    for (var oi = 0; oi < myOffers.length; oi++) {
-      if (myOffers[oi].status !== 'withdrawn') offered[myOffers[oi].demandId] = true;
+      items = buildContinuityItems(uid) || [];
+    } catch (e) {
+      items = [];
     }
-    items = items.filter(function (it) {
-      return !(it.kind === 'opportunity' && offered[it.demandId]);
-    });
+    try {
+      var myOffers = listOffersBySeller(uid) || [];
+      var offered = {};
+      for (var oi = 0; oi < myOffers.length; oi++) {
+        if (myOffers[oi].status !== 'withdrawn') offered[myOffers[oi].demandId] = true;
+      }
+      items = items.filter(function (it) {
+        return !(it.kind === 'opportunity' && offered[it.demandId]);
+      });
+    } catch (e2) {}
+    dash = dashboardForAuthor(uid);
+  } else {
+    /* Paralelo: sweep (não bloqueia) + continuity + dashboard */
+    try {
+      sweepExpiredNegotiations();
+    } catch (eSw2) {}
+    var pair = await Promise.all([
+      buildContinuityItemsFromApi(uid).catch(function () {
+        return [];
+      }),
+      dashboardForAuthorFromApi(uid).catch(function () {
+        return {
+          publications: [],
+          announcements: [],
+          totals: {
+            publications: 0,
+            announcements: 0,
+            views: 0,
+            clicks: 0,
+            interests: 0,
+            minguitoConversations: 0,
+            matched: 0,
+            retentionPct: 0,
+          },
+        };
+      }),
+    ]);
+    items = pair[0] || [];
+    dash = pair[1];
   }
+
+  /* Se o utilizador já saiu do Fluxo, não pinta por cima da outra aba */
+  if (!stillOnFluxo(gen)) return;
 
   var attention = [];
   var myDemands = [];
@@ -177,7 +220,6 @@ export async function renderActivities(root) {
       it.stateLabel !== COPY.stateMatched &&
       it.stateLabel !== COPY.stateClosed
     ) {
-      /* R3: abaixo do chão — sem Aceitar (muro); só recusar / outro valor via Minguito */
       var canConfirm =
         !!it.negotiationId &&
         it.proposedPrice != null &&
@@ -193,16 +235,14 @@ export async function renderActivities(root) {
     }
   }
 
-  var dash = isLocalMode()
-    ? dashboardForAuthor(uid)
-    : await dashboardForAuthorFromApi(uid);
   var T = dash.totals;
 
   var nAtt = attention.length;
 
   function paintHome() {
+    if (!stillOnFluxo(gen)) return;
     try {
-      sweepExpiredNegotiations();
+      if (isLocalMode()) sweepExpiredNegotiations();
     } catch (e) {}
     var html =
       pageHeaderHtml(COPY.headerFlows) +

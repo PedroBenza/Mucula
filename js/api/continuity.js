@@ -1,6 +1,6 @@
 /**
  * Continuity / Fluxo — ramo api (Supabase).
- * Não mistura localStorage. Procura local fica fora até D4.
+ * Metadados de listings em paralelo (sem N+1 sequencial).
  */
 import { sameUserId } from '../core/user-id.js';
 import { negotiationLabel } from '../domain/human-state.js';
@@ -10,25 +10,34 @@ import { fluxHintForNegotiation } from '../local/negotiation-map.js';
 import { listNegotiations } from './negotiations.js';
 import { fetchListingById, fetchMyListings } from './listings.js';
 
-async function resolveListingMeta(listingId, cache) {
-  if (!listingId) return { title: 'Negociação', imageUrl: '' };
-  if (cache[listingId]) return cache[listingId];
-  try {
-    var L = await fetchListingById(listingId);
-    var meta = {
-      title: (L && L.title) || 'Publicação',
-      imageUrl:
-        (L && (L.imageUrl || (L.imageUrls && L.imageUrls[0]))) || '',
-      price: L && L.price != null ? Number(L.price) : null,
-      status: (L && L.status) || null,
-    };
-    cache[listingId] = meta;
-    return meta;
-  } catch (e) {
-    var fallback = { title: 'Publicação', imageUrl: '' };
-    cache[listingId] = fallback;
-    return fallback;
+async function buildListingCache(listingIds) {
+  var cache = {};
+  var unique = [];
+  var seen = {};
+  for (var i = 0; i < listingIds.length; i++) {
+    var id = listingIds[i];
+    if (!id || seen[id]) continue;
+    seen[id] = true;
+    unique.push(id);
   }
+  await Promise.all(
+    unique.map(function (id) {
+      return fetchListingById(id)
+        .then(function (L) {
+          cache[id] = {
+            title: (L && L.title) || 'Publicação',
+            imageUrl:
+              (L && (L.imageUrl || (L.imageUrls && L.imageUrls[0]))) || '',
+            price: L && L.price != null ? Number(L.price) : null,
+            status: (L && L.status) || null,
+          };
+        })
+        .catch(function () {
+          cache[id] = { title: 'Publicação', imageUrl: '' };
+        });
+    })
+  );
+  return cache;
 }
 
 export async function buildContinuityItemsFromApi(userId) {
@@ -42,7 +51,11 @@ export async function buildContinuityItemsFromApi(userId) {
     negs = [];
   }
 
-  var cache = {};
+  var ids = [];
+  for (var i = 0; i < negs.length; i++) {
+    if (negs[i] && negs[i].listingId) ids.push(negs[i].listingId);
+  }
+  var cache = await buildListingCache(ids);
   var items = [];
 
   for (var j = 0; j < negs.length; j++) {
@@ -54,7 +67,10 @@ export async function buildContinuityItemsFromApi(userId) {
     if (!asSeller && !asBuyer) continue;
 
     var role = asSeller ? 'seller' : 'buyer';
-    var meta = await resolveListingMeta(n.listingId, cache);
+    var meta = (n.listingId && cache[n.listingId]) || {
+      title: 'Negociação',
+      imageUrl: '',
+    };
     var title = meta.title || (n.demandId ? 'Procura activa' : 'Negociação');
     var changed = fluxHintForNegotiation(n, role);
     var exp = getExpiryInfo(n);
@@ -62,8 +78,8 @@ export async function buildContinuityItemsFromApi(userId) {
       changed = exp.label + ' — ' + changed;
     }
 
-    var actionLabel = 'Ver no Fluxo';
-    var href = '/activities';
+    var actionLabel = 'Ver';
+    var href = n.listingId ? '/listing/' + n.listingId : '/activities';
     var needsSeller = !!(
       n.needsSellerDecision ||
       n.belowFloor ||

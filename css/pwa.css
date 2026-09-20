@@ -1,58 +1,59 @@
-/* Banner instalação PWA — Mucula */
+/* Barra PWA — topo, compacta (estilo app internacional) */
 #mc-pwa-banner {
   position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 9999;
-  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 10000;
   pointer-events: none;
 }
-.mc-pwa-sheet {
+.mc-pwa-bar {
   pointer-events: auto;
-  max-width: 420px;
-  margin: 0 auto;
-  background: var(--mc-card, #fff);
-  color: var(--mc-text, #1c1917);
-  border: 1px solid var(--mc-border, #e7e5e4);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 14px 16px;
-}
-.mc-pwa-title {
-  margin: 0 0 4px;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-.mc-pwa-text {
-  margin: 0 0 12px;
-  font-size: 0.82rem;
-  line-height: 1.35;
-  color: var(--mc-text-muted, #57534e);
-}
-.mc-pwa-actions {
   display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 12px;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  background: var(--mc-card, #fff);
+  border-bottom: 1px solid var(--mc-border, #e7e5e4);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
 }
-.mc-pwa-btn {
+.mc-pwa-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.mc-pwa-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--mc-text, #1c1917);
+  letter-spacing: -0.01em;
+}
+.mc-pwa-install {
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
   font-weight: 600;
-  cursor: pointer;
-}
-.mc-pwa-btn--primary {
   background: var(--mc-accent, #d97706);
   color: var(--mc-on-accent, #fff);
+  cursor: pointer;
 }
-.mc-pwa-btn--ghost {
+.mc-pwa-close {
+  border: none;
   background: transparent;
-  color: var(--mc-text-muted, #57534e);
+  color: var(--mc-text-muted, #78716c);
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
 }
-@media (min-width: 1024px) {
-  #mc-pwa-banner {
-    bottom: 16px;
-  }
+/* Empurra o shell quando a barra está visível */
+html.mc-pwa-open .mc-shell,
+html.mc-pwa-open #app {
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
 }
