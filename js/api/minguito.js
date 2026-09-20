@@ -124,16 +124,35 @@ export async function talkToMinguito(input) {
 
     return localTalkToMinguito(input);
   }
-  /* Modo api (Vercel/Supabase): sem servidor Node :3000 e sem Grok nesta fase.
-   * Resposta determinística — não chama API_URL (evita ERR e CORS falsos). */
+  /* Modo api: mediação determinística (sem Grok). Preço só via Minguito. */
+  const { mediateBuyerMessage, mediateSellerMessage } = await import('./minguito-mediate.js');
+  const { fetchListingById } = await import('./listings.js');
+  const { sameUserId, resolveUserId } = await import('../core/user-id.js');
+
+  var listingId = input.listingId;
+  var demandId = input.demandId;
+  var uid = resolveUserId();
+  if (!uid) {
+    return {
+      reply: 'Entra na conta para falar com o Minguito.',
+      domain: { status: 'need_auth' },
+    };
+  }
+
+  if (listingId && !demandId) {
+    try {
+      var listing = await fetchListingById(listingId);
+      var isSeller = sameUserId(listing && listing.authorId, uid);
+      if (isSeller) return mediateSellerMessage(input);
+      return mediateBuyerMessage(input);
+    } catch (e) {
+      return mediateBuyerMessage(input);
+    }
+  }
+
   return {
     reply:
-      'Sou o Minguito. No servidor ainda não negoceio por chat — isso chega na fase Grok. ' +
-      'Por agora: abre a publicação no Feed, segue no Fluxo quando houver proposta, ' +
-      'e o acordo continua pelas regras da plataforma (sem contacto directo na app).',
-    domain: {
-      status: 'api_minguito_pending',
-      phase: 'G',
-    },
+      'Abre uma publicação no Feed e escolhe «Negociar com o Minguito». Eu trato do preço — sem contacto directo entre vocês.',
+    domain: { status: 'need_listing' },
   };
 }

@@ -109,17 +109,64 @@ export async function renderListingDetail(root, id) {
           '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" style="margin-top:10px" id="mc-archive-listing">Arquivar publicação</button>';
       }
       if (myNeg && sameUserId(myNeg.sellerId, uid) && myNeg.state !== 'closed') {
+        var sPrice =
+          myNeg.proposedPrice != null
+            ? Number(myNeg.proposedPrice).toLocaleString('pt-AO') + ' Kz'
+            : null;
         actions +=
-          '<p class="mc-muted" style="margin-top:12px;font-size:13px">Negociação a cargo do Minguito. Acompanha em Fluxo.</p>';
+          '<p class="mc-muted" style="margin-top:12px;font-size:13px">O Minguito media esta negociação. Não falas com o interessado.</p>';
+        if (sPrice) {
+          actions +=
+            '<p style="margin-top:6px;font-size:13px">Proposta em cima da mesa: <strong>' +
+            escapeHtml(sPrice) +
+            '</strong> — decide no Fluxo.</p>';
+        } else {
+          actions +=
+            '<p style="margin-top:6px;font-size:13px">À espera que o Minguito traga uma proposta de preço.</p>';
+        }
         actions +=
-          '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" style="margin-top:8px" id="mc-open-minguito-seller">Abrir Minguito</button>';
+          '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" style="margin-top:10px" id="mc-goto-fluxo">Ir ao Fluxo</button>';
+        actions +=
+          '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" style="margin-top:8px" id="mc-open-minguito-seller">Falar com o Minguito</button>';
       }
     } else {
       actions +=
-        '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" style="margin-top:20px" id="mc-minguito-cta">' + COPY.negotiateWithMinguito + '</button>';
+        '<p class="mc-muted" style="margin-top:16px;font-size:13px">Não contactas o vendedor. O Minguito negoceia o preço (até 3 voltas) e só ele formaliza a proposta.</p>';
       if (myNeg && myNeg.state === 'matched') {
         actions +=
-          '<p class="mc-muted" style="margin-top:10px;font-size:13px">Acordo feito. O Minguito tem o resumo.</p>';
+          '<p style="margin-top:8px;font-size:13px">Acordo confirmado. Vê o resumo no Combinámos.</p>';
+        actions +=
+          '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" style="margin-top:10px" id="mc-goto-acordo">Ver acordo</button>';
+      } else if (myNeg && myNeg.state !== 'closed') {
+        var bPrice =
+          myNeg.proposedPrice != null
+            ? Number(myNeg.proposedPrice).toLocaleString('pt-AO') + ' Kz'
+            : null;
+        if (bPrice && (myNeg.needsSellerDecision || myNeg.state === 'pending_seller')) {
+          actions +=
+            '<p style="margin-top:8px;font-size:13px">O Minguito enviou <strong>' +
+            escapeHtml(bPrice) +
+            '</strong>. À espera do vendedor no Fluxo.</p>';
+        } else if (bPrice) {
+          actions +=
+            '<p style="margin-top:8px;font-size:13px">Proposta em curso: <strong>' +
+            escapeHtml(bPrice) +
+            '</strong>. Continua com o Minguito se precisares de ajustar.</p>';
+        } else {
+          actions +=
+            '<p style="margin-top:8px;font-size:13px">Interesse aberto. Continua a conversa com o Minguito para chegar a um valor.</p>';
+        }
+        actions +=
+          '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" style="margin-top:10px" id="mc-minguito-cta">' +
+          (COPY.negotiateWithMinguito || 'Falar com o Minguito') +
+          '</button>';
+        actions +=
+          '<button type="button" class="mc-btn mc-btn-secondary mc-btn-block" style="margin-top:8px" id="mc-goto-fluxo">Ver no Fluxo</button>';
+      } else {
+        actions +=
+          '<button type="button" class="mc-btn mc-btn-primary mc-btn-block" style="margin-top:10px" id="mc-minguito-cta">' +
+          (COPY.negotiateWithMinguito || 'Negociar com o Minguito') +
+          '</button>';
       }
     }
     
@@ -163,39 +210,47 @@ export async function renderListingDetail(root, id) {
       el.textContent = msg;
     }
     
+    function openMinguitoChat() {
+      navigate('/services?listingId=' + encodeURIComponent(id));
+    }
+
+    var goFx = box.querySelector('#mc-goto-fluxo');
+    if (goFx) goFx.onclick = function () { navigate('/activities'); };
+
+    var goAcordo = box.querySelector('#mc-goto-acordo');
+    if (goAcordo) {
+      goAcordo.onclick = function () {
+        if (myNeg && myNeg.id) navigate('/combinamos/' + myNeg.id);
+      };
+    }
+
     var ming = box.querySelector('#mc-minguito-cta');
     if (ming) {
-      ming.onclick = async function() {
+      ming.onclick = async function () {
         if (!uid) {
           if (!isAuthenticated()) setResumePath('/listing/' + id);
           showErr('Entra na conta para negociar.');
           return;
         }
+        ming.disabled = true;
         try {
+          /* Abre interesse no motor; o preço só o Minguito formaliza na conversa */
           await openNegotiation({
             listingId: id,
             buyerId: uid,
             sellerId: item.authorId || null,
           });
-          if (isLocalMode()) {
-            navigate('/services?listingId=' + encodeURIComponent(id));
-          } else {
-            showErr('Minguito estará disponível na próxima fase.');
-          }
         } catch (e) {
-          showErr((e && e.message) || 'Não foi possível iniciar.');
+          /* Se já existe negociação, seguimos na mesma para o chat */
         }
+        openMinguitoChat();
       };
     }
-    
+
     var mingSeller = box.querySelector('#mc-open-minguito-seller');
     if (mingSeller) {
-      mingSeller.onclick = function() {
-        if (isLocalMode()) {
-          navigate('/services?listingId=' + encodeURIComponent(id));
-        } else {
-          showErr('Minguito estará disponível na próxima fase.');
-        }
+      mingSeller.onclick = function () {
+        openMinguitoChat();
       };
     }
     var arch = box.querySelector('#mc-archive-listing');
