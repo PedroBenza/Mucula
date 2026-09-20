@@ -1,7 +1,7 @@
 /**
  * Criar procura — mesmo espírito de vender produto / oferecer serviço.
  */
-import { createDemand } from '../../local/demands.js';
+import { createDemand } from '../../api/demands.js';
 import { navigate } from '../../core/router.js';
 import { getSession } from '../../state/session.js';
 import { resolveUserId } from '../../core/user-id.js';
@@ -51,8 +51,9 @@ export function renderCreateDemand(root) {
   root.querySelector('#mc-d-back').onclick = function () {
     navigate('/create');
   };
-  root.querySelector('#mc-d-go').onclick = function () {
+  root.querySelector('#mc-d-go').onclick = async function () {
     var err = root.querySelector('#mc-d-err');
+    var btn = root.querySelector('#mc-d-go');
     err.hidden = true;
     var title = String(root.querySelector('#mc-d-title').value || '').trim();
     if (title.length < 3) {
@@ -60,14 +61,17 @@ export function renderCreateDemand(root) {
       err.textContent = 'Escreve o que procuras (mínimo 3 letras).';
       return;
     }
+    var authorId = resolveUserId();
+    if (!authorId) {
+      err.hidden = false;
+      err.textContent = 'Entra na conta para publicar uma procura.';
+      return;
+    }
+    btn.disabled = true;
+    var prev = btn.textContent;
+    btn.textContent = 'A publicar…';
     try {
-      var authorId = resolveUserId();
-      if (!authorId) {
-        err.hidden = false;
-        err.textContent = 'Entra na conta para publicar uma procura.';
-        return;
-      }
-      var d = createDemand(
+      var d = await createDemand(
         {
           title: title,
           category: root.querySelector('#mc-d-cat').value,
@@ -79,6 +83,8 @@ export function renderCreateDemand(root) {
       );
       navigate('/demand/' + d.id);
     } catch (e) {
+      btn.disabled = false;
+      btn.textContent = prev || 'Publicar procura';
       err.hidden = false;
       err.textContent =
         (e && e.message) || 'Não foi possível gravar a procura.';

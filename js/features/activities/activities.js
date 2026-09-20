@@ -18,7 +18,7 @@ import {
   sweepExpiredNegotiations,
 } from '../../api/negotiations.js';
 import { fmtKz } from '../../core/format.js';
-import { ensureDemandSeed } from '../../local/demands.js';
+import { ensureDemandSeed } from '../../api/demands.js';
 import { pageHeaderHtml } from '../../components/page-header.js';
 import { COPY } from '../../constants/copy.js';
 import { backButtonHtml } from '../../components/icons.js';

@@ -9,6 +9,8 @@ import { getExpiryInfo } from '../local/negotiations.js';
 import { fluxHintForNegotiation } from '../local/negotiation-map.js';
 import { listNegotiations } from './negotiations.js';
 import { fetchListingById, fetchMyListings } from './listings.js';
+import { listDemands } from './demands.js';
+import { demandLabel } from '../domain/human-state.js';
 
 async function buildListingCache(listingIds) {
   var cache = {};
@@ -57,6 +59,26 @@ export async function buildContinuityItemsFromApi(userId) {
   }
   var cache = await buildListingCache(ids);
   var items = [];
+
+  try {
+    var demands = (await listDemands(uid)) || [];
+    for (var di = 0; di < demands.length; di++) {
+      var d = demands[di];
+      if (d.status !== 'active' && d.status !== 'paused') continue;
+      items.push({
+        id: 'demand-' + d.id,
+        kind: 'demand',
+        title: d.title,
+        stateLabel: demandLabel(d.status),
+        changed: 'A procura continua no mercado',
+        actionLabel: 'Ver procura',
+        href: '/demand/' + d.id,
+        sort: d.updatedAt || d.createdAt || 0,
+        demandId: d.id,
+        imageUrl: '',
+      });
+    }
+  } catch (eDem) {}
 
   for (var j = 0; j < negs.length; j++) {
     var n = negs[j];

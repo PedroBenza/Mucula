@@ -1,13 +1,13 @@
 /**
  * Detalhe da procura — caminho alinhado a Publicar (claro, poucos CTAs).
  */
-import { getDemand, updateDemandStatus } from '../../local/demands.js';
+import { getDemand, updateDemandStatus } from '../../api/demands.js';
 import { localGetListings } from '../../local/store.js';
 import { matchDemandTiersLimited } from '../../domain/match-demand.js';
 import { navigate } from '../../core/router.js';
 import { fmtCardPrice } from '../../shared/format-price.js';
 import { CATEGORIES } from '../../constants/categories.js';
-import { openNegotiation } from '../../local/negotiations.js';
+import { openNegotiation } from '../../api/negotiations.js';
 import { getSession } from '../../state/session.js';
 import { resolveUserId } from '../../core/user-id.js';
 import { listOffersForDemand } from '../../local/demand-offers.js';
@@ -66,7 +66,7 @@ function cardListing(l, badge) {
   );
 }
 
-export function renderDemandDetail(root, id) {
+export async function renderDemandDetail(root, id) {
   if (root._mcDemandCleanup) {
     try {
       root._mcDemandCleanup();
@@ -74,7 +74,7 @@ export function renderDemandDetail(root, id) {
     root._mcDemandCleanup = null;
   }
 
-  var demand = getDemand(id);
+  var demand = await getDemand(id);
   if (!demand) {
     root.innerHTML =
       backButtonHtml('mc-dx') +
@@ -248,20 +248,19 @@ export function renderDemandDetail(root, id) {
 
     var refresh = root.querySelector('#mc-dd-refresh');
     if (refresh)
-      refresh.onclick = function () {
-        demand = getDemand(id) || demand;
+      refresh.onclick = async function () {
+        demand = (await getDemand(id)) || demand;
         lastSig = null;
         paint(getTiers(), { updated: true });
       };
 
     var ming = root.querySelector('#mc-dd-ming');
     if (ming)
-      ming.onclick = function () {
-        var sess = getSession();
+      ming.onclick = async function () {
         var buyerId = resolveUserId();
         if (!buyerId) return;
         try {
-          openNegotiation({ demandId: demand.id, buyerId: buyerId });
+          await openNegotiation({ demandId: demand.id, buyerId: buyerId });
         } catch (e) {}
         cleanup();
         navigate('/services?demandId=' + encodeURIComponent(demand.id));
@@ -269,9 +268,11 @@ export function renderDemandDetail(root, id) {
 
     var can = root.querySelector('#mc-dd-cancel');
     if (can)
-      can.onclick = function () {
-        updateDemandStatus(demand.id, 'expired');
-        demand = getDemand(id);
+      can.onclick = async function () {
+        try {
+          await updateDemandStatus(demand.id, 'expired');
+          demand = (await getDemand(id)) || demand;
+        } catch (e) {}
         cleanup();
         paint(getTiers(), {});
       };
@@ -284,8 +285,8 @@ export function renderDemandDetail(root, id) {
     });
   }
 
-  function tick(force) {
-    demand = getDemand(id) || demand;
+  async function tick(force) {
+    demand = (await getDemand(id)) || demand;
     if (demand.status !== 'active') {
       paint(getTiers(), {});
       cleanup();
