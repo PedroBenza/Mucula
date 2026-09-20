@@ -7,6 +7,7 @@ import {
   localGetListing,
   localCreateListing,
   localMyListings,
+  localSetListingStatus,
   ensureLocalSeed,
 } from '../local/store.js';
 import { filterOnMarket } from '../domain/listing-market.js';
@@ -254,4 +255,78 @@ export async function createListing(input) {
     status: data.status,
     createdAt: data.created_at ? new Date(data.created_at).getTime() : Date.now(),
   };
+}
+
+/** Status que o dono pode alterar pela UI (arquivar / voltar ao mercado).
+ *  reservado / vendido ficam só para o motor de negociação (RPCs). */
+var OWNER_STATUS_ALLOW = {
+  pausado: true,
+  disponivel: true,
+  active: true,
+};
+
+/**
+ * Altera o status de uma publicação do autor autenticado.
+ * Local → localStorage. Api → UPDATE listings (RLS: só o autor).
+ *
+ * @param {string} id
+ * @param {string} status  ex.: 'pausado' | 'disponivel'
+ * @returns {Promise<{ id: string, status: string }>}
+ */
+export async function setListingStatus(id, status) {
+  if (!id) {
+    const e = new Error('Publicação não encontrada.');
+    e.code = 'NOT_FOUND';
+    throw e;
+  }
+  const st = String(status || '').toLowerCase().trim();
+  if (!OWNER_STATUS_ALLOW[st]) {
+    const e = new Error('Este estado não pode ser alterado assim.');
+    e.code = 'STATUS_NOT_ALLOWED';
+    throw e;
+  }
+  /* Normaliza active → disponivel no servidor */
+  const normalized = st === 'active' ? 'disponivel' : st;
+
+  if (isLocalMode()) {
+    const row = localSetListingStatus(id, normalized);
+    return {
+      id: row._id || row.id || id,
+      status: row.status || normalized,
+    };
+  }
+
+  const sb = getSupabase();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    const e = new Error('Precisas de entrar na conta para arquivar.');
+    e.code = 'NEED_AUTH';
+    throw e;
+  }
+
+  const { data, error } = await sb
+    .from('listings')
+    .update({ status: normalized })
+    .eq('id', id)
+    .eq('author_id', user.id)
+    .select('id, status')
+    .maybeSingle();
+
+  if (error) {
+    const e = new Error(
+      error.message || 'Não foi possível actualizar a publicação.'
+    );
+    e.code = error.code || 'UPDATE_FAILED';
+    throw e;
+  }
+  if (!data) {
+    const e = new Error(
+      'Publicação não encontrada ou não tens permissão para a alterar.'
+    );
+    e.code = 'NOT_FOUND_OR_FORBIDDEN';
+    throw e;
+  }
+  return { id: data.id, status: data.status };
 }

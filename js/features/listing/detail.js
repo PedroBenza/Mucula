@@ -1,5 +1,5 @@
 import { isLocalMode } from '../../config.js';
-import { fetchListingById } from '../../api/listings.js';
+import { fetchListingById, setListingStatus } from '../../api/listings.js';
 import { fmtKz } from '../../core/format.js';
 import { navigate } from '../../core/router.js';
 import { ApiError, NetworkError } from '../../api/client.js';
@@ -14,7 +14,6 @@ import { COPY } from '../../constants/copy.js';
 import { track } from '../../local/telemetry.js';
 import { recordListingViewOncePerDay } from '../../local/listing-views.js';
 import { calcPlatformFee } from '../../local/platform-fee.js';
-import { localSetListingStatus } from '../../local/store.js';
 import { listingStatusLabel } from '../../domain/listing-market.js';
 import { setResumePath } from '../../core/resume.js';
 import { FEATURE_PLANS } from '../../local/feature-plans.js';
@@ -201,11 +200,17 @@ export async function renderListingDetail(root, id) {
     }
     var arch = box.querySelector('#mc-archive-listing');
     if (arch) {
-      arch.onclick = function() {
+      arch.onclick = async function () {
+        if (arch.disabled) return;
+        arch.disabled = true;
+        var prevLabel = arch.textContent;
+        arch.textContent = 'A arquivar…';
         try {
-          localSetListingStatus(id, 'pausado');
-          navigate('/feed');
+          await setListingStatus(id, 'pausado');
+          navigate('/feed', { replace: true });
         } catch (e) {
+          arch.disabled = false;
+          arch.textContent = prevLabel || 'Arquivar publicação';
           showErr((e && e.message) || 'Não foi possível arquivar.');
         }
       };
