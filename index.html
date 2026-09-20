@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mucula</title>
+  <link rel="icon" href="./assets/images/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/images/icon.png" />
+  <link rel="stylesheet" href="./css/tokens.css" />
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/design-system/actions.css" />
+  <link rel="stylesheet" href="./css/design-system/type-surface.css" />
+  <link rel="stylesheet" href="./css/design-system/states.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/features/feed-chrome.css" />
+  <link rel="stylesheet" href="./css/features/minguito.css" />
+  <link rel="stylesheet" href="./css/features/fluxo.css" />
+  <link rel="stylesheet" href="./css/features/publicar.css" />
+  <link rel="stylesheet" href="./css/desktop/shell.css" />
+  <link rel="stylesheet" href="./css/desktop/surfaces.css" />
+</head>
+<body>
+  <div id="app" class="mc-shell">
+    <main id="mc-main" class="mc-main"></main>
+        <nav id="mc-bottom-nav" class="mc-bottom-nav" aria-label="Principal">
+      <button type="button" data-nav="/feed" data-icon="home"><span class="mc-tab-ico" data-ico="home"></span><span class="mc-tab-lbl">Feed</span></button>
+      <button type="button" data-nav="/services" data-icon="chat"><span class="mc-tab-ico" data-ico="chat"></span><span class="mc-tab-lbl">Minguito</span></button>
+      <button type="button" data-nav="/create" data-icon="add" class="mc-tab-special"><span class="mc-tab-ico mc-tab-ico--add" data-ico="add"></span><span class="mc-tab-lbl">Publicar</span></button>
+      <button type="button" data-nav="/activities" data-icon="flash"><span class="mc-tab-ico" data-ico="flash"></span><span class="mc-tab-lbl">Fluxo</span></button>
+      <button type="button" data-nav="/profile" data-icon="person"><span class="mc-tab-ico" data-ico="person"></span><span class="mc-tab-lbl">Perfil</span></button>
+    </nav>
+  </div>
+  <script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4"
+  }
+}
+</script>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

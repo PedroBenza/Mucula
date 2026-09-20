@@ -1,0 +1,194 @@
+/**
+ * Hierarquia de acções — Design System Mucula
+ */
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mc-space-2);
+  min-height: var(--mc-control-h);
+  padding: 0 var(--mc-space-4);
+  border-radius: var(--mc-radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: var(--mc-weight-semibold);
+  font-size: var(--mc-text-body);
+  line-height: 1;
+  transition: background var(--mc-duration-fast) var(--mc-ease),
+    color var(--mc-duration-fast) var(--mc-ease),
+    opacity var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+}
+.mc-btn:disabled,
+.mc-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mc-btn-primary {
+  background: var(--mc-accent);
+  color: var(--mc-on-accent);
+}
+.mc-btn-primary:hover:not(:disabled) {
+  background: var(--mc-accent-hover);
+}
+.mc-btn-ghost,
+.mc-btn-secondary {
+  background: var(--mc-card);
+  color: var(--mc-text);
+  border: 1px solid var(--mc-border-strong, rgba(28, 25, 23, 0.14));
+  font-weight: var(--mc-weight-semibold);
+}
+.mc-btn-ghost:hover:not(:disabled),
+.mc-btn-secondary:hover:not(:disabled) {
+  background: var(--mc-surface);
+  border-color: var(--mc-text-muted);
+}
+.mc-btn-ghost.mc-btn-outline {
+  border-color: var(--mc-border);
+}
+.mc-btn-block {
+  width: 100%;
+}
+.mc-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mc-space-1);
+  min-height: 36px;
+  padding: var(--mc-space-1) 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--mc-text-body);
+  font-weight: var(--mc-weight-medium);
+  color: var(--mc-text-soft);
+  text-align: left;
+  transition: color var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-action:hover {
+  color: var(--mc-text);
+}
+.mc-action:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+  border-radius: var(--mc-radius-sm);
+}
+.mc-action--accent {
+  color: var(--mc-accent);
+  font-weight: var(--mc-weight-semibold);
+}
+.mc-action--accent:hover {
+  color: var(--mc-accent-hover);
+}
+.mc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--mc-text-soft);
+  cursor: pointer;
+  border-radius: var(--mc-radius-sm);
+  transition: color var(--mc-duration-fast) var(--mc-ease),
+    background var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-icon-btn:hover {
+  color: var(--mc-text);
+  background: var(--mc-surface);
+}
+.mc-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+}
+.mc-icon-btn svg {
+  width: var(--mc-icon-md);
+  height: var(--mc-icon-md);
+}
+
+/* ——— Padrão único Etapa 1 ——— */
+/* Voltar / navegação auxiliar */
+.mc-action--back {
+  margin: 0 0 var(--mc-space-3);
+  font-size: var(--mc-text-body);
+  color: var(--mc-text-soft);
+}
+.mc-action--back:hover {
+  color: var(--mc-text);
+}
+
+/* Alternativa em lista (Publicar: serviço, procura…) */
+.mc-action-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--mc-control-h);
+  padding: var(--mc-space-3) 0;
+  margin: 0;
+  border: none;
+  border-bottom: 1px solid var(--mc-border);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  font-size: var(--mc-text-body);
+  font-weight: var(--mc-weight-medium);
+  color: var(--mc-text);
+  text-align: left;
+  transition: color var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-action-row:hover {
+  color: var(--mc-accent);
+}
+.mc-action-row:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+}
+.mc-action-row:last-of-type {
+  border-bottom: none;
+}
+
+/* Ghost legado → mesmo peso visual que secondary leve (compat) */
+.mc-btn-ghost {
+  border-color: transparent;
+}
+
+.mc-action--back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mc-action--back svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+
+/* Barra Voltar fixa (não rola com o conteúdo) */
+.mc-back-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  margin: calc(-1 * var(--mc-space-md, 16px)) calc(-1 * var(--mc-screen-x, 16px)) 8px;
+  padding: 6px var(--mc-screen-x, 16px) 6px;
+  background: var(--mc-bg, #fafaf9);
+  border-bottom: 1px solid rgba(28, 25, 23, 0.06);
+}
+.mc-back-bar .mc-action--back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 0;
+  min-height: 28px;
+  line-height: 1.2;
+  font-size: 15px;
+}
+.mc-back-bar .mc-action--back svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}

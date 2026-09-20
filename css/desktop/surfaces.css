@@ -1,0 +1,76 @@
+/**
+ * Superfícies Desktop — leitura e espaço, sem dashboard SaaS.
+ * Só com .mc-is-desktop.
+ */
+
+@media (min-width: 1024px) {
+  /* Feed: grelha um pouco mais arejada */
+  .mc-is-desktop .mc-lgrid {
+    margin-left: -6px;
+    margin-right: -6px;
+  }
+  .mc-is-desktop .mc-lcard {
+    padding: 0 6px 10px;
+  }
+  .mc-is-desktop .mc-lcard-wide {
+    padding: 0 6px 12px;
+  }
+
+  /* Detalhe de anúncio: duas colunas (imagem | info) */
+  .mc-is-desktop[data-mc-route='listing'] .mc-main {
+    max-width: 1040px;
+  }
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(300px, 1fr);
+    gap: 28px 36px;
+    align-items: start;
+  }
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > img {
+    width: 100%;
+    border-radius: var(--mc-radius-lg);
+    margin-bottom: 0;
+  }
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > .mc-price,
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > .mc-h1,
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > .mc-muted,
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > p,
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > button,
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > div {
+    grid-column: 2;
+  }
+  .mc-is-desktop[data-mc-route='listing'] #mc-detail > img {
+    grid-column: 1;
+    grid-row: 1 / span 8;
+  }
+
+  /* Minguito: coluna de conversa confortável */
+  .mc-is-desktop[data-mc-route='minguito'] .mc-main {
+    max-width: 720px;
+  }
+  .mc-is-desktop[data-mc-route='minguito'] #mc-msgs {
+    min-height: 360px;
+  }
+
+  /* Publicar: formulário centrado, largura legível */
+  .mc-is-desktop[data-mc-route='publish'] .mc-main {
+    max-width: 560px;
+  }
+  .mc-is-desktop[data-mc-route='publish'] .mc-input,
+  .mc-is-desktop[data-mc-route='publish'] .mc-btn-block {
+    max-width: 100%;
+  }
+
+  /* Fluxo: lista legível, não dashboard */
+  .mc-is-desktop[data-mc-route='fluxo'] .mc-main {
+    max-width: 720px;
+  }
+  .mc-is-desktop[data-mc-route='fluxo'] .mc-card {
+    padding: 16px 18px;
+  }
+
+  /* Combinámos */
+  .mc-is-desktop[data-mc-route='match'] .mc-main {
+    max-width: 560px;
+  }
+}

@@ -1,0 +1,141 @@
+/**
+ * Tipografia + superfícies + modal — Design System Mucula
+ */
+.mc-h1 {
+  margin: 0;
+  font-size: var(--mc-text-title);
+  font-weight: var(--mc-weight-bold);
+  letter-spacing: -0.02em;
+  line-height: var(--mc-leading-tight);
+  color: var(--mc-text);
+}
+.mc-h2 {
+  margin: 0;
+  font-size: var(--mc-text-subtitle);
+  font-weight: var(--mc-weight-semibold);
+  line-height: var(--mc-leading-tight);
+  color: var(--mc-text);
+}
+.mc-muted {
+  color: var(--mc-text-soft);
+  font-size: var(--mc-text-meta);
+  font-weight: var(--mc-weight-medium);
+  line-height: var(--mc-leading-body);
+}
+.mc-price {
+  font-size: var(--mc-text-price);
+  font-weight: var(--mc-weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--mc-text);
+  line-height: var(--mc-leading-tight);
+}
+.mc-error {
+  color: var(--mc-error);
+  font-size: var(--mc-text-meta);
+  font-weight: var(--mc-weight-medium);
+}
+.mc-label {
+  display: block;
+  font-size: var(--mc-text-label);
+  font-weight: var(--mc-weight-semibold);
+  margin-bottom: var(--mc-space-1);
+  color: var(--mc-text-soft);
+}
+.mc-field {
+  margin-bottom: var(--mc-space-4);
+}
+.mc-input {
+  width: 100%;
+  min-height: var(--mc-control-h);
+  padding: var(--mc-space-2) var(--mc-space-3);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-md);
+  background: var(--mc-card);
+  color: var(--mc-text);
+  font-size: var(--mc-text-body);
+  transition: border-color var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-input:hover {
+  border-color: var(--mc-border-strong);
+}
+.mc-input:focus {
+  outline: none;
+  border-color: var(--mc-accent);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+}
+.mc-card {
+  background: var(--mc-card);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  overflow: hidden;
+}
+.mc-surface {
+  background: transparent;
+  border: none;
+}
+.mc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--mc-z-modal);
+  background: rgba(28, 25, 23, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mc-space-4);
+}
+.mc-modal-overlay[hidden] {
+  display: none !important;
+}
+.mc-modal-sheet {
+  background: var(--mc-card);
+  border-radius: var(--mc-radius-lg);
+  padding: var(--mc-space-5) var(--mc-space-4);
+  max-width: 360px;
+  width: 100%;
+  border: none;
+  box-shadow: var(--mc-elev-2);
+}
+.mc-modal-sheet .mc-h2 {
+  margin-bottom: var(--mc-space-2);
+}
+.mc-loading {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--mc-border);
+  border-top-color: var(--mc-accent);
+  animation: mcspin var(--mc-duration-slow) linear infinite;
+}
+@keyframes mcspin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-loading {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ——— Etapa 2: listas sem caixa a mais ——— */
+.mc-list {
+  margin: 0;
+  padding: 0;
+}
+.mc-list-item {
+  padding: var(--mc-space-3) 0;
+  border-bottom: 1px solid var(--mc-border);
+  background: transparent;
+}
+.mc-list-item:last-child {
+  border-bottom: none;
+}
+.mc-list-item--block {
+  display: block;
+}
+.mc-empty {
+  padding: var(--mc-space-5) 0;
+}
+
+.mc-card--pad {
+  padding: var(--mc-space-4);
+}

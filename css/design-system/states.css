@@ -1,0 +1,70 @@
+/**
+ * Etapa 3 — estados interactivos + motion (Design System)
+ */
+
+/* Focus visível global (teclado) */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+/* Bottom nav / tab */
+.mc-bottom-nav button {
+  transition: color var(--mc-duration-fast) var(--mc-ease),
+    background var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-bottom-nav button:focus-visible {
+  box-shadow: var(--mc-focus-ring);
+  border-radius: var(--mc-radius-sm);
+}
+.mc-bottom-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Desktop nav */
+.mc-desktop-nav-item {
+  transition: color var(--mc-duration-fast) var(--mc-ease),
+    background var(--mc-duration-fast) var(--mc-ease);
+}
+.mc-desktop-nav-item:focus-visible {
+  box-shadow: var(--mc-focus-ring);
+}
+
+/* Category / chips touch targets */
+.mc-cat-chip,
+.mc-ticker,
+.mc-search-input {
+  transition: border-color var(--mc-duration-fast) var(--mc-ease),
+    background var(--mc-duration-fast) var(--mc-ease),
+    color var(--mc-duration-fast) var(--mc-ease);
+}
+
+/* Step dots — estado sem animação ornamental sob reduced motion */
+.mc-step-dot {
+  transition: background var(--mc-duration-fast) var(--mc-ease),
+    transform var(--mc-duration-fast) var(--mc-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-step-dot.is-on {
+    transform: none;
+  }
+  .mc-btn-primary:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Disabled genérico em controlos */
+.mc-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--mc-surface);
+}

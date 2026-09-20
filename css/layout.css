@@ -1,0 +1,40 @@
+.mc-shell{min-height:100vh;display:flex;flex-direction:column;background:var(--mc-bg)}
+.mc-main{flex:1;min-width:0;width:100%;max-width:100%;box-sizing:border-box;padding:var(--mc-space-md) var(--mc-screen-x);padding-bottom:calc(var(--mc-nav-h) + 16px)}
+.mc-boot{position:fixed;inset:0;z-index:var(--mc-z-boot);background:var(--mc-bg-deep);display:flex;align-items:center;justify-content:center}
+.mc-boot[hidden]{display:none!important}
+.mc-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--mc-nav-h);display:flex;background:var(--mc-tab-bg);border-top:1px solid var(--mc-border);z-index:var(--mc-z-nav)}
+.mc-bottom-nav button{flex:1;border:0;background:transparent;color:var(--mc-text-soft);font-size:0.65rem;font-weight:600;padding:8px 4px}
+.mc-bottom-nav button.is-active{color:var(--mc-primary)}
+
+.mc-bottom-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.mc-tab-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  color: rgba(28,25,23,0.4);
+}
+.mc-bottom-nav button.is-active .mc-tab-ico {
+  color: var(--mc-primary);
+}
+.mc-tab-lbl {
+  font-size: 0.65rem; /* tab label denser than body */
+  font-weight: 600;
+}
+.mc-tab-special .mc-tab-ico--add {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mc-primary);
+  color: #fff;
+  margin-top: -10px;
+}
+.mc-tab-special.is-active .mc-tab-ico--add {
+  color: #fff;
+}

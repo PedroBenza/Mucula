@@ -1,0 +1,91 @@
+/**
+ * Mucula Design System — tokens
+ * docs/MUCULA_DESIGN_SYSTEM.md
+ */
+:root {
+  --mc-bg: #fafaf8;
+  --mc-bg-deep: #0d0d0d;
+  --mc-card: #ffffff;
+  --mc-surface: rgba(28, 25, 23, 0.03);
+  --mc-border: rgba(28, 25, 23, 0.08);
+  --mc-border-strong: rgba(28, 25, 23, 0.14);
+
+  --mc-text: #1c1917;
+  --mc-text-soft: rgba(28, 25, 23, 0.58);
+  --mc-text-muted: rgba(28, 25, 23, 0.4);
+
+  --mc-accent: #d97706;
+  --mc-accent-hover: #b45309;
+  --mc-primary: var(--mc-accent);
+  --mc-secondary: #ea580c;
+
+  --mc-error: #dc2626;
+  --mc-success: #16a34a;
+  --mc-warning: #ca8a04;
+  --mc-info: #0284c7;
+
+  --mc-tab-bg: #ffffff;
+  --mc-on-accent: #ffffff;
+
+  --mc-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mc-text-display: 1.75rem;
+  --mc-text-title: 1.25rem;
+  --mc-text-subtitle: 0.9375rem;
+  --mc-text-body: 0.9375rem;
+  --mc-text-label: 0.75rem;
+  --mc-text-meta: 0.75rem;
+  --mc-text-price: 1.125rem;
+  --mc-leading-tight: 1.2;
+  --mc-leading-body: 1.45;
+  --mc-weight-regular: 400;
+  --mc-weight-medium: 500;
+  --mc-weight-semibold: 600;
+  --mc-weight-bold: 700;
+
+  --mc-space-1: 4px;
+  --mc-space-2: 8px;
+  --mc-space-3: 12px;
+  --mc-space-4: 16px;
+  --mc-space-5: 24px;
+  --mc-space-6: 32px;
+  --mc-space-7: 48px;
+  --mc-space-8: 64px;
+  --mc-space-xs: var(--mc-space-1);
+  --mc-space-sm: var(--mc-space-2);
+  --mc-space-md: var(--mc-space-3);
+  --mc-space-lg: var(--mc-space-5);
+  --mc-screen-x: var(--mc-space-3);
+
+  --mc-radius-sm: 6px;
+  --mc-radius-md: 10px;
+  --mc-radius-lg: 14px;
+
+  --mc-elev-0: none;
+  --mc-elev-1: 0 1px 2px rgba(28, 25, 23, 0.06);
+  --mc-elev-2: 0 8px 24px rgba(28, 25, 23, 0.1);
+
+  --mc-control-h: 44px;
+  --mc-nav-h: 64px;
+  --mc-focus-ring: 0 0 0 2px var(--mc-bg), 0 0 0 4px var(--mc-accent);
+
+  --mc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --mc-duration-fast: 120ms;
+  --mc-duration: 180ms;
+  --mc-duration-slow: 280ms;
+
+  --mc-z-nav: 100;
+  --mc-z-modal: 1000;
+  --mc-z-boot: 2000;
+
+  --mc-icon-sm: 16px;
+  --mc-icon-md: 20px;
+  --mc-icon-lg: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mc-duration-fast: 0ms;
+    --mc-duration: 0ms;
+    --mc-duration-slow: 0ms;
+  }
+}

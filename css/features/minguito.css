@@ -1,0 +1,244 @@
+/**
+ * Minguito — conversa profissional (composer + bolhas)
+ */
+.mc-ming-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--mc-nav-h, 64px) - 72px);
+  margin: 0 calc(-1 * var(--mc-screen-x, 12px));
+  padding: 0 var(--mc-screen-x, 12px);
+}
+
+/* Avatar fixo no topo da conversa */
+.mc-ming-hero {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--mc-space-3, 12px) 0 var(--mc-space-2, 8px);
+  background: linear-gradient(
+    180deg,
+    var(--mc-bg, #fafaf8) 70%,
+    rgba(250, 250, 248, 0.85) 100%
+  );
+  text-align: center;
+}
+.mc-ming-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--mc-card, #fff);
+  border: 2px solid rgba(217, 119, 6, 0.25);
+  box-shadow: var(--mc-elev-1, 0 1px 2px rgba(28, 25, 23, 0.06));
+}
+.mc-ming-hero-title {
+  margin: 10px 0 0;
+  font-size: var(--mc-text-subtitle, 0.9375rem);
+  font-weight: var(--mc-weight-bold, 700);
+  color: var(--mc-text, #1c1917);
+  letter-spacing: -0.02em;
+}
+.mc-ming-hero-sub {
+  margin: 4px 0 0;
+  font-size: var(--mc-text-meta, 0.75rem);
+  color: var(--mc-text-soft, rgba(28, 25, 23, 0.58));
+  font-weight: var(--mc-weight-medium, 500);
+  max-width: 280px;
+  line-height: 1.35;
+}
+
+/* Contexto (anúncio / procura) */
+.mc-ming-pin {
+  margin: 0 0 var(--mc-space-2, 8px);
+  padding: 8px 12px;
+  border-radius: var(--mc-radius-md, 10px);
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  font-size: var(--mc-text-meta, 0.75rem);
+  color: var(--mc-text, #1c1917);
+  font-weight: var(--mc-weight-medium, 500);
+  line-height: 1.35;
+}
+.mc-ming-pin[hidden] {
+  display: none !important;
+}
+
+/* Thread */
+.mc-ming-thread {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 8px 0 16px;
+  min-height: 180px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mc-ming-row {
+  display: flex;
+  width: 100%;
+  align-items: flex-end;
+  gap: 8px;
+}
+.mc-ming-row--user {
+  justify-content: flex-end;
+}
+.mc-ming-row--bot {
+  justify-content: flex-start;
+}
+
+.mc-ming-row-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.mc-ming-bubble {
+  max-width: min(88%, 420px);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.mc-ming-bubble--bot {
+  background: var(--mc-card, #fff);
+  color: var(--mc-text, #1c1917);
+  border: 1px solid var(--mc-border, rgba(28, 25, 23, 0.08));
+  border-radius: 4px 16px 16px 16px;
+  box-shadow: var(--mc-elev-0);
+}
+.mc-ming-bubble--user {
+  background: var(--mc-accent, #d97706);
+  color: #fff;
+  border-radius: 16px 16px 4px 16px;
+  border: none;
+}
+.mc-ming-bubble--user .mc-action--accent {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.mc-ming-items {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mc-ming-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--mc-radius-sm, 6px);
+  border: 1px solid var(--mc-border);
+  background: var(--mc-surface, rgba(28, 25, 23, 0.03));
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mc-text);
+  cursor: pointer;
+}
+.mc-ming-item:hover {
+  border-color: var(--mc-accent);
+  color: var(--mc-accent);
+}
+
+.mc-ming-typing {
+  font-size: 12px;
+  color: var(--mc-text-muted);
+  padding: 4px 8px;
+}
+
+/* Composer profissional (caixa) */
+.mc-ming-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  margin: 0 calc(-1 * var(--mc-screen-x, 12px));
+  padding: 10px var(--mc-screen-x, 12px) 12px;
+  background: var(--mc-bg, #fafaf8);
+  border-top: 1px solid var(--mc-border, rgba(28, 25, 23, 0.08));
+}
+.mc-ming-composer-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  background: var(--mc-card, #fff);
+  border: 1px solid var(--mc-border-strong, rgba(28, 25, 23, 0.14));
+  border-radius: 16px;
+  box-shadow: var(--mc-elev-1, 0 1px 2px rgba(28, 25, 23, 0.06));
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.mc-ming-composer-box:focus-within {
+  border-color: var(--mc-accent, #d97706);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+.mc-ming-input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 10px 0;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--mc-text);
+  font-family: inherit;
+}
+.mc-ming-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+.mc-ming-input::placeholder {
+  color: var(--mc-text-muted);
+}
+.mc-ming-send {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: var(--mc-accent, #d97706);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms ease, opacity 120ms ease;
+}
+.mc-ming-send:hover:not(:disabled) {
+  background: var(--mc-accent-hover, #b45309);
+}
+.mc-ming-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mc-ming-send:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+}
+.mc-ming-send svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .mc-is-desktop[data-mc-route='minguito'] .mc-ming-shell {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .mc-ming-avatar {
+    width: 88px;
+    height: 88px;
+  }
+}

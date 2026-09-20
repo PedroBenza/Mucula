@@ -1,0 +1,111 @@
+/**
+ * Shell Desktop — activo só com .mc-is-desktop ( ≥ 1024px ).
+ * Mobile intacto: estas regras não aplicam abaixo do breakpoint.
+ */
+
+.mc-desktop-nav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .mc-is-desktop .mc-shell {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100vh;
+  }
+
+  .mc-is-desktop .mc-bottom-nav {
+    display: none !important; /* único !important: esconder tab bar mobile no desktop */
+  }
+
+  .mc-is-desktop .mc-desktop-nav {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 220px;
+    width: 220px;
+    border-right: 1px solid var(--mc-border);
+    background: #fff;
+    padding: var(--mc-space-5) var(--mc-space-3);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    z-index: calc(var(--mc-z-nav) + 1);
+  }
+
+  .mc-is-desktop .mc-desktop-brand {
+    font-size: var(--mc-text-title);
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    padding: var(--mc-space-1) var(--mc-space-3) var(--mc-space-5);
+    color: var(--mc-text);
+  }
+
+  .mc-is-desktop .mc-desktop-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    padding: var(--mc-space-2) var(--mc-space-3);
+    border-radius: var(--mc-radius-md);
+    color: var(--mc-text-soft);
+    font-size: var(--mc-text-body);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item:hover {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--mc-text);
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item.is-active {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--mc-primary);
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item .mc-tab-ico {
+    color: inherit;
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item--publish {
+    margin-top: 8px;
+    background: rgba(217, 119, 6, 0.08);
+    color: var(--mc-primary);
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item--publish.is-active {
+    background: var(--mc-primary);
+    color: #fff;
+  }
+
+  .mc-is-desktop .mc-desktop-nav-item--publish.is-active .mc-tab-ico {
+    color: #fff;
+  }
+
+  .mc-is-desktop .mc-main {
+    flex: 1;
+    min-width: 0;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--mc-space-5) var(--mc-space-6) var(--mc-space-7);
+    padding-bottom: var(--mc-space-7);
+  }
+
+  /* Header sticky alinha ao conteúdo Desktop */
+  .mc-is-desktop .mc-page-header {
+    margin-left: -32px;
+    margin-right: -32px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
