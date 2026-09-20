@@ -116,16 +116,23 @@ export async function confirmAsSeller(id, userId, opts) {
 
 export async function completeDealAsSeller(id, userId) {
   if (isLocalMode()) return localNeg.completeDealAsSeller(id, userId);
+  if (!id) {
+    const e = new Error('Negociação inválida.');
+    e.code = 'INVALID';
+    throw e;
+  }
   const sb = getSupabase();
   const { data, error } = await sb.rpc('complete_deal', {
     p_negotiation_id: id,
   });
   if (error) {
-    const e = new Error(error.message);
+    const e = new Error(
+      humanRpcError(error, 'Não foi possível marcar como vendido.')
+    );
     e.code = error.code || 'NEG_COMPLETE_FAILED';
     throw e;
   }
-  return mapRow(data);
+  return mapRow(Array.isArray(data) ? data[0] : data);
 }
 
 export async function getNegotiation(id) {

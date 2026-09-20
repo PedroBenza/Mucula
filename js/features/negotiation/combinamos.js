@@ -11,7 +11,7 @@ import { negotiationLabel } from '../../domain/human-state.js';
 import { COPY } from '../../constants/copy.js';
 import { backButtonHtml } from '../../components/icons.js';
 import { getSession } from '../../state/session.js';
-import { resolveUserId } from '../../core/user-id.js';
+import { resolveUserId, sameUserId } from '../../core/user-id.js';
 
 function esc(s) {
   return String(s)
@@ -48,7 +48,7 @@ export async function renderCombinamos(root, negId) {
     (demand && demand.neighborhood) ||
     '';
   
-  var isSeller = !!(uid && n.sellerId && String(n.sellerId) === String(uid));
+  var isSeller = !!(uid && n.sellerId && sameUserId(n.sellerId, uid));
   
   var rows = '';
   rows +=
@@ -119,15 +119,22 @@ export async function renderCombinamos(root, negId) {
   
   var soldBtn = root.querySelector('#mc-match-sold');
   if (soldBtn) {
-    soldBtn.onclick = async function() {
+    soldBtn.onclick = async function () {
+      if (soldBtn.disabled) return;
       var errEl = root.querySelector('#mc-match-sold-err');
+      soldBtn.disabled = true;
+      var prev = soldBtn.textContent;
+      soldBtn.textContent = 'A concluir…';
       try {
         await completeDealAsSeller(n.id, uid);
-        renderCombinamos(root, negId);
+        await renderCombinamos(root, negId);
       } catch (e) {
+        soldBtn.disabled = false;
+        soldBtn.textContent = prev || 'Marcar como vendido';
         if (errEl) {
           errEl.hidden = false;
-          errEl.textContent = (e && e.message) || 'Não foi possível concluir.';
+          errEl.textContent =
+            (e && e.message) || 'Não foi possível marcar como vendido.';
         }
       }
     };
