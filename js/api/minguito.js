@@ -124,8 +124,11 @@ export async function talkToMinguito(input) {
 
     return localTalkToMinguito(input);
   }
-  /* Modo api: mediação determinística (sem Grok). Preço só via Minguito. */
-  const { mediateBuyerMessage, mediateSellerMessage } = await import('./minguito-mediate.js');
+  /* Modo api: motor determinístico manda no preço; Groq só polishes o texto. */
+  const { mediateBuyerMessage, mediateSellerMessage } = await import(
+    './minguito-mediate.js'
+  );
+  const { polishMinguitoReply } = await import('./minguito-llm.js');
   const { fetchListingById } = await import('./listings.js');
   const { sameUserId, resolveUserId } = await import('../core/user-id.js');
 
@@ -139,20 +142,38 @@ export async function talkToMinguito(input) {
     };
   }
 
+  async function withVoice(out) {
+    if (!out || !out.reply) return out;
+    try {
+      var polished = await polishMinguitoReply({
+        message: input.message,
+        deterministicReply: out.reply,
+        context: Object.assign({}, out.domain || {}, {
+          listingId: listingId || null,
+          demandId: demandId || null,
+        }),
+      });
+      if (polished) out.reply = polished;
+    } catch (eVoice) {}
+    return out;
+  }
+
   if (listingId && !demandId) {
     try {
       var listing = await fetchListingById(listingId);
       var isSeller = sameUserId(listing && listing.authorId, uid);
-      if (isSeller) return mediateSellerMessage(input);
-      return mediateBuyerMessage(input);
+      var out = isSeller
+        ? await mediateSellerMessage(input)
+        : await mediateBuyerMessage(input);
+      return withVoice(out);
     } catch (e) {
-      return mediateBuyerMessage(input);
+      return withVoice(await mediateBuyerMessage(input));
     }
   }
 
-  return {
+  return withVoice({
     reply:
       'Abre uma publicação no Feed e escolhe «Negociar com o Minguito». Eu trato do preço — sem contacto directo entre vocês.',
     domain: { status: 'need_listing' },
-  };
+  });
 }
