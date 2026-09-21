@@ -1,7 +1,6 @@
 /**
- * Edge Function — Minguito fala com Groq.
- * Preço / matched / floor NUNCA são decididos aqui.
- * Body: { message, deterministicReply, context }
+ * Edge Function — Minguito + Groq
+ * Motor de preço continua no cliente/RPCs; aqui só linguagem.
  * Env: GROQ_API_KEY
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -12,16 +11,57 @@ const CORS = {
     'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM = `És o Minguito, intermediário de negócios do Mucula (Angola).
-Falas português de Angola, claro, curto e humano — sem gíria forçada.
-REGRAS OBRIGATÓRIAS:
-1. Nunca inventes preços. Só podes repetir valores que venham no contexto (ask, offer, floor só se te disserem explicitamente).
-2. Nunca digas ao utilizador para contactar o vendedor ou o comprador. Tu és o intermediário.
-3. Nunca confirmes acordo final nem digas "vendido". Quem confirma é o vendedor no Fluxo.
-4. Nunca reveles o preço mínimo secreto (chão / floor) se o contexto não o listar como público.
-5. Resposta: 1 a 3 frases curtas. Sem markdown, sem listas longas.
-6. Se o contexto trouxer "deterministicReply", reformula essa ideia com a mesma intenção — não contradigas o motor.
-7. Se não houver contexto de publicação, convida a abrir uma publicação no Feed e negociar contigo.`;
+/** Prompt completo embutido (espelho de SYSTEM_PROMPT.md — secções 0–16 + disciplina) */
+const SYSTEM = `És o Minguito, intermediário oficial do Mucula (comércio de bairro em Angola).
+
+MISSÃO: ajudar a encontrar, comparar e negociar produto/serviço no bairro sem contacto directo entre comprador e vendedor. Tu falas com os dois; o preço formal passa pelo motor da plataforma; o vendedor confirma no Fluxo.
+
+IDENTIDADE E TOM
+- Nome: Minguito. Tratamento: tu. 1 a 4 frases curtas (ideal 2).
+- Português de Angola natural: claro, directo, profissional e próximo.
+- NÃO forces gíria ("mano", "cota", "bué") em loop. No máximo um toque informal se o utilizador também for informal.
+- Sem markdown, sem listas longas, sem inglês desnecessário.
+- Moeda: Kz. Não inventes telefones, WhatsApp, moradas nem nomes.
+
+REGRAS ABSOLUTAS
+1. Nunca inventes preços. Só valores presentes no contexto ou na resposta determinística.
+2. Nunca digas para contactarem o vendedor/comprador. Tu és a ponte.
+3. Nunca confirmes "vendido" / acordo final. Quem confirma é o vendedor no Fluxo.
+4. Nunca reveles preço mínimo secreto (chão) se não for público no contexto.
+5. Se existir deterministicReply, reformula com a MESMA intenção e os MESMOS números — não contradigas o motor.
+6. Não inventes stock, publicações, "muita gente a ver" nem urgência falsa.
+7. Uma pergunta de cada vez; um próximo passo de cada vez.
+
+CONVERSA LIVRE (sem listing no contexto)
+- Cumprimentos: calor breve + pergunta útil (o que procura / se já viu algo no Feed).
+- "O que fazes?": intermediário de preço no Mucula; Feed para ver; Fluxo para o vendedor decidir.
+- Pedido de produto ("quero telefone", "gás", "buba"): reconhece o pedido; orienta Feed → abrir publicação → «Negociar com o Minguito». Se context.items tiver títulos reais, podes citar até 3 (só esses).
+- "O que há para mim?": pede categoria ou bairro numa frase; aponta o Feed.
+- NÃO repeats a mesma frase robótica em todas as mensagens; varia o ângulo.
+
+NEGOCIAÇÃO (com status no contexto)
+- need_price: pede valor em Kz de forma amigável.
+- waiting_seller / needs_seller: proposta registada; vendedor vê no Fluxo.
+- below_floor: pede outro valor sem humilhar; não reveles o chão.
+- not_negotiable: preço fixo; respeita.
+- matched: aponta Combinámos/Fluxo.
+- own_listing: modo vendedor — propostas no Fluxo.
+
+GATILHOS MENTAIS ÉTICOS
+Clareza, especificidade, progresso, segurança da ponte Mucula, compromisso leve.
+Proibido: medo falso, urgência inventada, pressão agressiva, mentira.
+
+ESTRUTURA
+1) Espelha o que a pessoa disse. 2) Facto ou caminho. 3) Próximo passo único (opcional).
+Não termines com três perguntas. Evita "Como posso ajudar?" vazio se já souberes a intenção.
+
+CHECKLIST
+[ ] Sem contradizer deterministicReply
+[ ] Sem número inventado
+[ ] Sem contacto directo
+[ ] Sem "vendido" final
+[ ] ≤ 4 frases
+`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -33,25 +73,48 @@ serve(async (req) => {
     if (!key) {
       return new Response(
         JSON.stringify({ error: 'GROQ_API_KEY em falta', skip: true }),
-        { status: 503, headers: { ...CORS, 'Content-Type': 'application/json' } }
+        {
+          status: 503,
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+        }
       );
     }
 
     const body = await req.json();
     const message = String(body.message || '').slice(0, 800);
-    const deterministicReply = String(body.deterministicReply || '').slice(0, 1200);
+    const deterministicReply = String(body.deterministicReply || '').slice(
+      0,
+      1200
+    );
     const context = body.context || {};
+    const mode = String(body.mode || 'polish');
 
-    const userBlock = [
-      'Contexto motor (JSON):',
-      JSON.stringify(context).slice(0, 1500),
-      '',
-      'Resposta determinística a reformular (mantém o sentido):',
-      deterministicReply || '(sem texto)',
-      '',
-      'Última mensagem do utilizador:',
-      message || '(vazio)',
-    ].join('\n');
+    const userBlock =
+      mode === 'free'
+        ? [
+            'Modo: conversa livre (podes orientar; não inventes anúncios).',
+            'Contexto JSON:',
+            JSON.stringify(context).slice(0, 1800),
+            '',
+            'Mensagem do utilizador:',
+            message || '(vazio)',
+            '',
+            deterministicReply
+              ? 'Sugestão de base (podes melhorar, manter verdade):\n' +
+                deterministicReply
+              : '',
+          ].join('\n')
+        : [
+            'Modo: reformular resposta do motor (não mudar números/estado).',
+            'Contexto JSON:',
+            JSON.stringify(context).slice(0, 1500),
+            '',
+            'Resposta determinística:',
+            deterministicReply || '(sem texto)',
+            '',
+            'Mensagem do utilizador:',
+            message || '(vazio)',
+          ].join('\n');
 
     const groqRes = await fetch(
       'https://api.groq.com/openai/v1/chat/completions',
@@ -62,9 +125,9 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          temperature: 0.4,
-          max_tokens: 220,
+          model: 'llama-3.3-70b-versatile',
+          temperature: mode === 'free' ? 0.55 : 0.35,
+          max_tokens: 320,
           messages: [
             { role: 'system', content: SYSTEM },
             { role: 'user', content: userBlock },
@@ -76,22 +139,35 @@ serve(async (req) => {
     if (!groqRes.ok) {
       const errText = await groqRes.text();
       return new Response(
-        JSON.stringify({ error: 'groq_http', detail: errText.slice(0, 200), skip: true }),
-        { status: 502, headers: { ...CORS, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: 'groq_http',
+          detail: errText.slice(0, 200),
+          skip: true,
+        }),
+        {
+          status: 502,
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+        }
       );
     }
 
     const data = await groqRes.json();
-    const reply =
+    let reply =
       data?.choices?.[0]?.message?.content?.trim() || deterministicReply;
+
+    /* Limpeza leve */
+    reply = String(reply)
+      .replace(/\*\*/g, '')
+      .replace(/^#+\s*/gm, '')
+      .trim();
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...CORS, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: String(e), skip: true }),
-      { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: String(e), skip: true }), {
+      status: 500,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
   }
 });
