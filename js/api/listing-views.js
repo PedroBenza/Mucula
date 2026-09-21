@@ -64,3 +64,36 @@ export async function recordListingViewOncePerDay(listingId, userId) {
   }
   return true;
 }
+
+/**
+ * Contagem de vistas por listing (dono — RLS author).
+ * @param {string[]} listingIds
+ * @returns {Promise<Record<string, number>>}
+ */
+export async function countViewsByListingIds(listingIds) {
+  var map = {};
+  if (isLocalMode() || !listingIds || !listingIds.length) return map;
+
+  const sb = getSupabase();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return map;
+
+  /* Chunk para não estourar .in() */
+  var ids = listingIds.filter(Boolean);
+  var chunk = 80;
+  for (var i = 0; i < ids.length; i += chunk) {
+    var part = ids.slice(i, i + chunk);
+    const { data, error } = await sb
+      .from('listing_views')
+      .select('listing_id')
+      .in('listing_id', part);
+    if (error || !data) continue;
+    for (var j = 0; j < data.length; j++) {
+      var lid = data[j].listing_id;
+      map[lid] = (map[lid] || 0) + 1;
+    }
+  }
+  return map;
+}

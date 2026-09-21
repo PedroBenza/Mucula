@@ -10,6 +10,7 @@ import { fluxHintForNegotiation } from '../local/negotiation-map.js';
 import { listNegotiations } from './negotiations.js';
 import { fetchListingById, fetchMyListings } from './listings.js';
 import { listDemands } from './demands.js';
+import { countViewsByListingIds } from './listing-views.js';
 import { demandLabel } from '../domain/human-state.js';
 
 async function buildListingCache(listingIds) {
@@ -150,6 +151,7 @@ export async function buildContinuityItemsFromApi(userId) {
 }
 
 export async function dashboardForAuthorFromApi(userId) {
+  var uid = userId ? String(userId) : null;
   var list = [];
   try {
     list = (await fetchMyListings()) || [];
@@ -157,25 +159,68 @@ export async function dashboardForAuthorFromApi(userId) {
     list = [];
   }
 
+  var ids = [];
+  for (var a = 0; a < list.length; a++) {
+    var lid = list[a].id || list[a]._id;
+    if (lid) ids.push(lid);
+  }
+
+  var viewMap = {};
+  try {
+    viewMap = (await countViewsByListingIds(ids)) || {};
+  } catch (eV) {
+    viewMap = {};
+  }
+
+  /* Interesses / matched a partir de negociações onde sou vendedor */
+  var interestByListing = {};
+  var matchedByListing = {};
+  var totalInterests = 0;
+  var totalMatched = 0;
+  try {
+    var negs = (await listNegotiations(uid)) || [];
+    for (var n = 0; n < negs.length; n++) {
+      var neg = negs[n];
+      if (!neg || !sameUserId(neg.sellerId, uid)) continue;
+      var nid = neg.listingId;
+      if (!nid) continue;
+      if (neg.state === 'closed' && neg.closedReason === 'rejected') continue;
+      if (neg.state === 'matched') {
+        matchedByListing[nid] = (matchedByListing[nid] || 0) + 1;
+        totalMatched += 1;
+      } else if (neg.state !== 'closed') {
+        interestByListing[nid] = (interestByListing[nid] || 0) + 1;
+        totalInterests += 1;
+      }
+    }
+  } catch (eN) {}
+
   var pubs = [];
   var ads = [];
+  var totalViews = 0;
 
   for (var i = 0; i < list.length; i++) {
     var L = list[i];
     var id = L.id || L._id;
+    var views = viewMap[id] || 0;
+    var interests = interestByListing[id] || 0;
+    var matched = matchedByListing[id] || 0;
+    totalViews += views;
+    var retention =
+      views > 0 ? Math.round((interests / views) * 100) : 0;
     var st = {
       listingId: id,
       title: L.title || '',
       isAnuncio: !!L.isFeatured,
       imageUrl: L.imageUrl || (L.imageUrls && L.imageUrls[0]) || '',
       price: L.price != null ? Number(L.price) : 0,
-      views: 0,
-      clicks: 0,
-      interests: 0,
+      views: views,
+      clicks: views,
+      interests: interests,
       minguitoConversations: 0,
       features: 0,
-      matched: 0,
-      retentionPct: 0,
+      matched: matched,
+      retentionPct: retention,
       listing: L,
       status: L.status || 'disponivel',
     };
@@ -183,18 +228,21 @@ export async function dashboardForAuthorFromApi(userId) {
     else pubs.push(st);
   }
 
+  var retAll =
+    totalViews > 0 ? Math.round((totalInterests / totalViews) * 100) : 0;
+
   return {
     publications: pubs,
     announcements: ads,
     totals: {
       publications: pubs.length,
       announcements: ads.length,
-      views: 0,
-      clicks: 0,
-      interests: 0,
+      views: totalViews,
+      clicks: totalViews,
+      interests: totalInterests,
       minguitoConversations: 0,
-      matched: 0,
-      retentionPct: 0,
+      matched: totalMatched,
+      retentionPct: retAll,
     },
   };
 }
